@@ -4,8 +4,8 @@
 export const SITE = {
   name: "지원금찾기",
   tagline: "소상공인·자영업 정부지원금 5분 만에 찾기",
-  // 배포 후 실제 도메인으로 교체
-  baseUrl: "https://example.com",
+  // 배포 도메인 (canonical·sitemap·OG태그 기준)
+  baseUrl: "https://jovial-fairy-eb03cf.netlify.app",
   desc: "소상공인·자영업자를 위한 정부지원금·정책자금·창업지원사업을 업종·지역별로 쉽게 정리했습니다.",
 };
 
