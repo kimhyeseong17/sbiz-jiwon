@@ -4,7 +4,7 @@ import { readFile, writeFile, mkdir, rm } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { normalize, renderIndex, renderDetail, renderSitemap, ROBOTS } from "./lib.mjs";
+import { normalize, renderIndex, renderDetail, renderCategory, renderSitemap, slug, ROBOTS } from "./lib.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const DIST = join(ROOT, "dist");
@@ -24,18 +24,52 @@ const alive = list.filter((a) => {
   return ms >= -30 * 86400000;
 });
 
+// 카테고리 그룹핑 (지역별/분야별, 최소 건수 이상만)
+const MIN_CAT = 5;
+function groupBy(items, key) {
+  const m = new Map();
+  for (const a of items) {
+    const v = (a[key] || "").trim();
+    if (!v) continue;
+    if (!m.has(v)) m.set(v, []);
+    m.get(v).push(a);
+  }
+  return [...m.entries()]
+    .filter(([, arr]) => arr.length >= MIN_CAT)
+    .sort((a, b) => b[1].length - a[1].length)
+    .map(([name, arr]) => ({ name, slug: slug(name), count: arr.length, items: arr }));
+}
+const regionCats = groupBy(alive, "region");
+const fieldCats = groupBy(alive, "field");
+const cats = {
+  region: regionCats.map(({ name, slug, count }) => ({ name, slug, count })),
+  field: fieldCats.map(({ name, slug, count }) => ({ name, slug, count })),
+};
+
 await rm(DIST, { recursive: true, force: true });
 await mkdir(join(DIST, "g"), { recursive: true });
+await mkdir(join(DIST, "r"), { recursive: true });
+await mkdir(join(DIST, "c"), { recursive: true });
 
-await writeFile(join(DIST, "index.html"), renderIndex(alive, today), "utf8");
+await writeFile(join(DIST, "index.html"), renderIndex(alive, today, cats), "utf8");
 for (const a of alive) {
   await writeFile(join(DIST, "g", `${a.id}.html`), renderDetail(a, today), "utf8");
 }
-await writeFile(join(DIST, "sitemap.xml"), renderSitemap(alive, today), "utf8");
+const catPaths = [];
+for (const c of regionCats) {
+  await writeFile(join(DIST, "r", `${c.slug}.html`), renderCategory({ kind: "r", name: c.name, items: c.items, today, cats }), "utf8");
+  catPaths.push(`/r/${encodeURIComponent(c.slug)}.html`);
+}
+for (const c of fieldCats) {
+  await writeFile(join(DIST, "c", `${c.slug}.html`), renderCategory({ kind: "c", name: c.name, items: c.items, today, cats }), "utf8");
+  catPaths.push(`/c/${encodeURIComponent(c.slug)}.html`);
+}
+await writeFile(join(DIST, "sitemap.xml"), renderSitemap(alive, today, catPaths), "utf8");
 await writeFile(join(DIST, "robots.txt"), ROBOTS, "utf8");
 
 console.log(`✅ 생성 완료 (기준일 ${today})`);
 console.log(`   index.html 1개`);
-console.log(`   g/*.html ${alive.length}개`);
-console.log(`   sitemap.xml, robots.txt`);
+console.log(`   g/*.html ${alive.length}개 (공고 상세)`);
+console.log(`   r/*.html ${regionCats.length}개 (지역별), c/*.html ${fieldCats.length}개 (분야별)`);
+console.log(`   sitemap.xml (${1 + catPaths.length + alive.length} URL), robots.txt`);
 console.log(`   (전체 ${list.length}건 중 ${list.length - alive.length}건은 마감 30일 경과로 제외)`);

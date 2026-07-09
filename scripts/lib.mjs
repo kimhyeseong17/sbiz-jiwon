@@ -148,10 +148,16 @@ table.info td{padding:8px 10px;border-bottom:1px solid var(--line)}
 .notice{background:#fff9e6;border:1px solid #f0e3b0;border-radius:8px;padding:10px 12px;font-size:12.5px;color:#7a6a2f;margin:16px 0}
 footer{border-top:1px solid var(--line);margin-top:28px;padding:18px 0;color:var(--mut);font-size:12.5px}
 .sec{font-size:15px;font-weight:800;margin:22px 0 4px}
+.chiprow{display:flex;flex-wrap:wrap;gap:7px;margin:8px 0 4px}
+.chip{font-size:13px;background:var(--soft);color:#33507d;border:1px solid var(--line);border-radius:999px;padding:5px 11px}
+.chip:hover{border-color:var(--brand);text-decoration:none}
+.chip.chip-on{background:var(--brand);color:#fff;border-color:var(--brand)}
+.chip b{color:var(--mut);font-weight:600;font-size:11px}
+.chip.chip-on b{color:#dbe6ff}
 @media (prefers-color-scheme:dark){
   :root{--bg:#16181d;--fg:#e9eaed;--mut:#9aa0aa;--line:#2c2f36;--soft:#1e2229}
   .card,header.top{background:transparent}
-  .tag{color:#a9c2ef}
+  .tag,.chip{color:#a9c2ef}
 }
 `;
 
@@ -211,7 +217,26 @@ function isNew(registeredAt, today) {
   return d != null && d >= 0 && d <= 7;
 }
 
-export function renderIndex(list, today) {
+// 카테고리 슬러그 (URL용): 한글/영숫자 유지, 나머지는 -
+export function slug(s = "") {
+  return String(s).trim().replace(/[^0-9A-Za-z가-힣]+/g, "-").replace(/^-+|-+$/g, "") || "etc";
+}
+
+// 지역별/분야별 칩 네비게이션 (cats = {region:[{name,slug,count}], field:[...]})
+function catNav(cats, activeKey = "") {
+  const row = (label, kind, arr) =>
+    arr && arr.length
+      ? `<div class="sec">${label}</div><div class="chiprow">${arr
+          .map((c) => {
+            const on = `${kind}:${c.name}` === activeKey ? " chip-on" : "";
+            return `<a class="chip${on}" href="/${kind}/${encodeURIComponent(c.slug)}.html">${escapeHtml(c.name)} <b>${c.count}</b></a>`;
+          })
+          .join("")}</div>`
+      : "";
+  return row("📍 지역별로 찾기", "r", cats.region) + row("🗂 분야별로 찾기", "c", cats.field);
+}
+
+export function renderIndex(list, today, cats = { region: [], field: [] }) {
   const soon = list
     .filter((a) => {
       const d = daysUntil(a.applyEnd, today);
@@ -221,19 +246,53 @@ export function renderIndex(list, today) {
   const rest = list
     .filter((a) => !soon.includes(a))
     .sort((x, y) => (y.registeredAt || "").localeCompare(x.registeredAt || ""));
+  const recent = rest.slice(0, 80);
 
   const body = `
-  <h1>소상공인·자영업 정부지원금 모음</h1>
+  <h1>소상공인·창업 정부지원사업 모음</h1>
   <div class="meta">총 ${list.length}건 · 매일 자동 업데이트 · 기준일 ${today}</div>
-  <div class="lead">💡 원하는 <b>업종·지역</b>으로 좁혀서 보세요. 각 공고에서 "누가 / 얼마 / 언제까지 / 어떻게"를 3줄로 정리해 드립니다.</div>
+  <div class="lead">💡 <b>지역·분야</b>로 좁혀서 보세요. 각 공고에서 "누가 / 얼마 / 언제까지 / 어떻게"를 정리해 드립니다.</div>
+  ${catNav(cats)}
   ${soon.length ? `<div class="sec">⏰ 이번 주 마감임박</div>${soon.map((a) => card(a, today)).join("")}` : ""}
-  <div class="sec">📋 전체 지원사업</div>
-  ${rest.map((a) => card(a, today)).join("")}
+  <div class="sec">🆕 최신 지원사업 ${rest.length > recent.length ? `(최근 ${recent.length}건)` : ""}</div>
+  ${recent.map((a) => card(a, today)).join("")}
+  ${rest.length > recent.length ? `<p class="meta">더 많은 지원사업은 위의 <b>지역별·분야별</b>에서 확인하세요.</p>` : ""}
   `;
   return shell({
     title: `${SITE.name} — ${SITE.tagline}`,
     desc: SITE.desc,
     canonical: SITE.baseUrl + "/",
+    body,
+  });
+}
+
+// 지역별/분야별 landing 페이지
+export function renderCategory({ kind, name, items, today, cats }) {
+  const labelKo = kind === "r" ? "지역" : "분야";
+  const sorted = items.slice().sort((x, y) => {
+    const dx = daysUntil(x.applyEnd, today), dy = daysUntil(y.applyEnd, today);
+    const ax = dx == null || dx < 0 ? 1 : 0, ay = dy == null || dy < 0 ? 1 : 0;
+    if (ax !== ay) return ax - ay;
+    return (x.applyEnd || "9999").localeCompare(y.applyEnd || "9999");
+  });
+  const h1 = kind === "r" ? `${name} 창업·소상공인 지원사업 모음` : `${name} 분야 창업지원사업 모음`;
+  const intro =
+    kind === "r"
+      ? `${name} 지역 소상공인·예비창업자가 신청할 수 있는 정부·지자체 지원사업 ${items.length}건을 모았습니다. 마감 임박 순으로 정리했으니 놓치지 마세요.`
+      : `'${name}' 분야의 창업·소상공인 지원사업 ${items.length}건입니다. 대상·금액·신청기간을 한눈에 확인하고 바로 신청하세요.`;
+  const body = `
+  <p class="meta"><a href="/">홈</a> › ${labelKo}별 › ${escapeHtml(name)}</p>
+  <h1>${escapeHtml(h1)}</h1>
+  <div class="lead">${escapeHtml(intro)}</div>
+  ${catNav(cats, `${kind}:${name}`)}
+  <div class="sec">📋 ${escapeHtml(name)} 지원사업 ${items.length}건</div>
+  ${sorted.map((a) => card(a, today)).join("")}
+  <p><a href="/">← 전체 지원사업 보기</a></p>
+  `;
+  return shell({
+    title: `${name} 지원사업 ${items.length}건 | ${SITE.name}`,
+    desc: intro,
+    canonical: `${SITE.baseUrl}/${kind}/${encodeURIComponent(slug(name))}.html`,
     body,
   });
 }
@@ -285,8 +344,12 @@ export function renderDetail(a, today) {
   });
 }
 
-export function renderSitemap(list, today) {
-  const urls = [`${SITE.baseUrl}/`, ...list.map((a) => `${SITE.baseUrl}/g/${encodeURIComponent(a.id)}.html`)];
+export function renderSitemap(list, today, extraPaths = []) {
+  const urls = [
+    `${SITE.baseUrl}/`,
+    ...extraPaths.map((p) => `${SITE.baseUrl}${p}`),
+    ...list.map((a) => `${SITE.baseUrl}/g/${encodeURIComponent(a.id)}.html`),
+  ];
   const items = urls
     .map((u) => `  <url><loc>${u}</loc><lastmod>${today}</lastmod></url>`)
     .join("\n");
