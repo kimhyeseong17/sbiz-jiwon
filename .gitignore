@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.env
+*.log
+.DS_Store
+
+# data/announcements.json 은 Netlify 빌드에 필요하므로 커밋함(무시하지 않음)

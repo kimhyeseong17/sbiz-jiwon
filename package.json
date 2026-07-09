@@ -1,0 +1,13 @@
+{
+  "name": "sbiz-jiwon",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "소상공인 지원금·정책자금 자동 큐레이션 사이트 (의존성 0 정적 생성기)",
+  "scripts": {
+    "fetch": "node scripts/fetch.mjs",
+    "build": "node scripts/build.mjs",
+    "serve": "node scripts/serve.mjs",
+    "dev": "node scripts/build.mjs && node scripts/serve.mjs"
+  }
+}
