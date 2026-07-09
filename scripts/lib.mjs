@@ -70,8 +70,8 @@ export function normalize(raw) {
   const pickC = (...keys) => cleanText(pick(...keys));
 
   // 신청기간이 "20260701 ~ 20260815" 형태로 한 필드에 오는 경우 분해
-  let start = pick("applyStart", "reqstBeginDe", "pbanc_rcpt_bgng_dt");
-  let end = pick("applyEnd", "reqstEndDe", "pbanc_rcpt_end_dt");
+  let start = pick("applyStart", "reqstBeginDe", "pbanc_rcpt_bgng_dt", "applicationStartDate");
+  let end = pick("applyEnd", "reqstEndDe", "pbanc_rcpt_end_dt", "applicationEndDate");
   const range = pick("reqstBeginEndDe", "applyPeriod");
   if ((!start || !end) && range) {
     const parts = range.split(/[~∼-]/).map((s) => s.trim()).filter(Boolean);
@@ -85,7 +85,7 @@ export function normalize(raw) {
   const realId = pick("pbanc_sn", "pblancId", "id");
 
   // 공식 링크: K-Startup은 pbanc_sn으로 딥링크 구성이 가장 안정적
-  let url = pick("sourceUrl", "pblancUrl", "biz_gdnc_url", "detl_pg_url", "rceptEngnHmpgUrl");
+  let url = pick("sourceUrl", "pblancUrl", "biz_gdnc_url", "detl_pg_url", "viewUrl", "rceptEngnHmpgUrl");
   const sn = pick("pbanc_sn");
   if (sn) url = `https://www.k-startup.go.kr/web/contents/bizpbanc-ongoing.do?schM=view&pbancSn=${sn}`;
   else if (url && url.startsWith("/")) url = "https://www.bizinfo.go.kr" + url;
@@ -106,7 +106,7 @@ export function normalize(raw) {
     registeredAt: normDate(pick("registeredAt", "creatPnttm", "creat_dt")),
     sourceUrl: url,
     howto: pickC("howto", "biz_aply_url"),
-    summary: truncate(pickC("summary", "bsnsSumryCn", "pbanc_ctnt"), 220),
+    summary: truncate(pickC("summary", "bsnsSumryCn", "pbanc_ctnt", "dataContents"), 220),
   };
 }
 
