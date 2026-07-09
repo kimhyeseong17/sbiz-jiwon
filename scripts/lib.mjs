@@ -7,8 +7,9 @@ export const SITE = {
   // 배포 도메인 (canonical·sitemap·OG태그 기준)
   baseUrl: "https://jovial-fairy-eb03cf.netlify.app",
   desc: "소상공인·자영업자를 위한 정부지원금·정책자금·창업지원사업을 업종·지역별로 쉽게 정리했습니다.",
-  // 구글 서치콘솔 소유권 확인용 (삭제 금지)
+  // 검색엔진 소유권 확인용 (삭제 금지)
   googleVerification: "C3PipA9O20tJBMXDGbpjp8Yf-stMDBUm57gzBB0rezE",
+  naverVerification: "67387dc167dcff6289229d0f0bfd5aaaec2989d9",
   // 문의/제휴 이메일 (원하는 주소로 교체)
   contactEmail: "hatto3992@gmail.com",
 };
@@ -170,6 +171,7 @@ function shell({ title, desc, canonical, body, jsonld = "" }) {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 ${SITE.googleVerification ? `<meta name="google-site-verification" content="${SITE.googleVerification}">` : ""}
+${SITE.naverVerification ? `<meta name="naver-site-verification" content="${SITE.naverVerification}">` : ""}
 <title>${escapeHtml(title)}</title>
 <meta name="description" content="${escapeHtml(desc)}">
 <link rel="canonical" href="${canonical}">
