@@ -10,7 +10,7 @@ export const SITE = {
   // 구글 서치콘솔 소유권 확인용 (삭제 금지)
   googleVerification: "C3PipA9O20tJBMXDGbpjp8Yf-stMDBUm57gzBB0rezE",
   // 문의/제휴 이메일 (원하는 주소로 교체)
-  contactEmail: "",
+  contactEmail: "hatto3992@gmail.com",
 };
 
 export function escapeHtml(s = "") {
