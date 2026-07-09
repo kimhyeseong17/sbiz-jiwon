@@ -1,0 +1,41 @@
+name: 매일 지원공고 자동 갱신
+
+on:
+  schedule:
+    - cron: "0 0 * * *"   # 매일 00:00 UTC = 09:00 한국시간
+  workflow_dispatch: {}    # 깃허브에서 수동 실행 버튼
+
+permissions:
+  contents: write          # 데이터 커밋/푸시 권한
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 저장소 체크아웃
+        uses: actions/checkout@v4
+
+      - name: Node 설치
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: 최신 공고 수집 (K-Startup + 중기부)
+        env:
+          SERVICE_KEY: ${{ secrets.SERVICE_KEY }}
+        run: |
+          node scripts/fetch.mjs
+          node scripts/fetch-mss.mjs
+
+      - name: 변경사항 있으면 커밋·푸시 (→ Netlify 자동 배포)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/announcements.json
+          if git diff --staged --quiet; then
+            echo "변경 없음 — 커밋 생략"
+          else
+            git commit -m "chore: 지원공고 자동 갱신 ($(date -u +%Y-%m-%d))"
+            git push
+            echo "갱신 커밋·푸시 완료"
+          fi
