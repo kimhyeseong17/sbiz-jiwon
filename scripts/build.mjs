@@ -4,7 +4,7 @@ import { readFile, writeFile, mkdir, rm } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { normalize, renderIndex, renderDetail, renderCategory, renderSitemap, slug, ROBOTS } from "./lib.mjs";
+import { normalize, renderIndex, renderDetail, renderCategory, renderStaticPage, staticPages, renderSitemap, slug, ROBOTS } from "./lib.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const DIST = join(ROOT, "dist");
@@ -63,6 +63,12 @@ for (const c of regionCats) {
 for (const c of fieldCats) {
   await writeFile(join(DIST, "c", `${c.slug}.html`), renderCategory({ kind: "c", name: c.name, items: c.items, today, cats }), "utf8");
   catPaths.push(`/c/${encodeURIComponent(c.slug)}.html`);
+}
+// 안내 페이지 (소개/개인정보/약관/문의)
+const pages = staticPages(today);
+for (const p of pages) {
+  await writeFile(join(DIST, p.path.replace(/^\//, "")), renderStaticPage(p), "utf8");
+  catPaths.push(p.path);
 }
 await writeFile(join(DIST, "sitemap.xml"), renderSitemap(alive, today, catPaths), "utf8");
 await writeFile(join(DIST, "robots.txt"), ROBOTS, "utf8");

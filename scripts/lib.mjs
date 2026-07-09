@@ -9,6 +9,8 @@ export const SITE = {
   desc: "소상공인·자영업자를 위한 정부지원금·정책자금·창업지원사업을 업종·지역별로 쉽게 정리했습니다.",
   // 구글 서치콘솔 소유권 확인용 (삭제 금지)
   googleVerification: "C3PipA9O20tJBMXDGbpjp8Yf-stMDBUm57gzBB0rezE",
+  // 문의/제휴 이메일 (원하는 주소로 교체)
+  contactEmail: "",
 };
 
 export function escapeHtml(s = "") {
@@ -186,9 +188,10 @@ ${jsonld ? `<script type="application/ld+json">${jsonld}</script>` : ""}
 ${body}
 </main>
 <footer><div class="wrap">
-  <p>본 사이트는 <b>공식 정부 사이트가 아닙니다.</b> 공고 정보는 기업마당 등 공개 데이터를 요약·재구성한 것으로,
+  <p>본 사이트는 <b>공식 정부 사이트가 아닙니다.</b> 공고 정보는 공공데이터포털 등 공개 데이터를 요약·재구성한 것으로,
   정확한 내용과 신청은 반드시 각 공고의 <b>공식 출처</b>에서 확인하세요.</p>
-  <p>© ${SITE.name} · 정보 제공 목적 · 문의/제휴 환영</p>
+  <p><a href="/about.html">소개</a> · <a href="/privacy.html">개인정보처리방침</a> · <a href="/terms.html">이용약관·면책</a> · <a href="/contact.html">문의·제휴</a></p>
+  <p>© ${SITE.name} · 정보 제공 목적</p>
 </div></footer>
 </body>
 </html>`;
@@ -363,3 +366,77 @@ export const ROBOTS = `User-agent: *
 Allow: /
 Sitemap: ${SITE.baseUrl}/sitemap.xml
 `;
+
+// 정적 안내 페이지 (소개/개인정보/약관/문의)
+export function renderStaticPage({ path, title, desc, bodyHtml }) {
+  return shell({
+    title: `${title} | ${SITE.name}`,
+    desc: desc || title,
+    canonical: `${SITE.baseUrl}${path}`,
+    body: `<p class="meta"><a href="/">홈</a> › ${escapeHtml(title)}</p>\n<h1>${escapeHtml(title)}</h1>\n${bodyHtml}`,
+  });
+}
+
+// 4개 안내 페이지 콘텐츠 생성 (today = 시행일)
+export function staticPages(today) {
+  const email = SITE.contactEmail || "(문의 이메일 준비 중)";
+  return [
+    {
+      path: "/about.html",
+      title: "소개",
+      desc: `${SITE.name}는 소상공인·예비창업자를 위해 정부·공공기관 지원사업 공고를 모아 쉽게 정리하는 정보 서비스입니다.`,
+      bodyHtml: `
+<p><b>${SITE.name}</b>는 소상공인·자영업자·예비창업자가 자신에게 맞는 <b>정부·공공기관 지원사업</b>을 빠르게 찾도록 돕는 정보 서비스입니다.</p>
+<div class="sec">무엇을 하나요?</div>
+<p>흩어져 있는 지원사업 공고를 한 곳에 모아 "누가 / 얼마 / 언제까지 / 어떻게" 신청하는지 쉽게 정리하고, 지역·분야별로 찾아볼 수 있게 제공합니다.</p>
+<div class="sec">데이터 출처</div>
+<p>공공데이터포털(data.go.kr)의 오픈API — <b>창업진흥원 K-Startup</b>, <b>중소벤처기업부 사업공고</b> 등에서 공개된 정보를 매일 자동으로 수집·요약합니다.</p>
+<div class="notice">⚠️ 본 사이트는 <b>공식 정부 사이트가 아닙니다.</b> 지원 조건·마감은 변경될 수 있으며, 정확한 내용과 신청은 반드시 각 공고의 공식 출처에서 확인하세요.</div>
+<p><a href="/">← 지원사업 둘러보기</a></p>`,
+    },
+    {
+      path: "/privacy.html",
+      title: "개인정보처리방침",
+      desc: `${SITE.name} 개인정보처리방침`,
+      bodyHtml: `
+<p>${SITE.name}(이하 "사이트")는 이용자의 개인정보를 중요하게 생각하며, 아래와 같이 처리방침을 안내합니다. (시행일: ${today})</p>
+<div class="sec">1. 수집하는 개인정보</div>
+<p>본 사이트는 회원가입 없이 자유롭게 열람할 수 있으며, 별도의 개인정보를 직접 수집하지 않습니다. 향후 상담 신청 등 기능 도입 시, 수집 항목·목적·보유기간을 별도로 고지하고 동의를 받습니다.</p>
+<div class="sec">2. 쿠키 및 광고</div>
+<p>본 사이트는 서비스 운영을 위해 Google AdSense 등 제3자 광고를 게재할 수 있습니다. 광고 사업자는 쿠키를 사용하여 이용자의 관심에 기반한 광고를 제공할 수 있습니다. 이용자는 브라우저 설정 또는 <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener">Google 광고 설정</a>에서 맞춤 광고를 거부할 수 있습니다.</p>
+<div class="sec">3. 접속 통계</div>
+<p>서비스 개선을 위해 접속 통계 도구(예: Google Analytics)를 통해 비식별 통계 정보를 수집할 수 있습니다.</p>
+<div class="sec">4. 문의</div>
+<p>개인정보 관련 문의: ${escapeHtml(email)}</p>
+<p><a href="/">← 홈으로</a></p>`,
+    },
+    {
+      path: "/terms.html",
+      title: "이용약관·면책",
+      desc: `${SITE.name} 이용약관 및 면책 고지`,
+      bodyHtml: `
+<div class="sec">정보 제공 목적</div>
+<p>본 사이트가 제공하는 모든 정보는 <b>참고용</b>이며, 지원사업의 정확성·완전성을 보증하지 않습니다. 최종 지원 조건·마감·자격은 반드시 각 공고의 <b>공식 출처</b>에서 확인하시기 바랍니다.</p>
+<div class="sec">대행·중개가 아님</div>
+<p>본 사이트는 <b>지원금 신청 대행이나 정책자금 중개(브로커) 서비스가 아닙니다.</b> 순수 정보 제공 및 합법적 제휴만을 목적으로 합니다.</p>
+<div class="sec">저작권 및 출처</div>
+<p>공고 원문의 저작권은 각 발행 기관에 있으며, 본 사이트는 공개 데이터를 요약·재구성하여 제공합니다. 각 공고에는 공식 출처 링크를 함께 표기합니다.</p>
+<div class="sec">외부 링크</div>
+<p>본 사이트에서 연결되는 외부 사이트의 내용·정책에 대해서는 책임지지 않습니다.</p>
+<p><a href="/">← 홈으로</a></p>`,
+    },
+    {
+      path: "/contact.html",
+      title: "문의·제휴",
+      desc: `${SITE.name} 문의 및 제휴 안내`,
+      bodyHtml: `
+<p>서비스 개선 제안, 오류 신고, 광고·제휴 문의를 환영합니다.</p>
+<table class="info">
+  <tr><th>이메일</th><td>${escapeHtml(email)}</td></tr>
+  <tr><th>운영</th><td>${SITE.name} 운영팀</td></tr>
+</table>
+<p>공고 정보의 오류나 마감된 사업을 발견하시면 알려주세요. 빠르게 반영하겠습니다.</p>
+<p><a href="/">← 홈으로</a></p>`,
+    },
+  ];
+}
