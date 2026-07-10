@@ -4,7 +4,7 @@ import { readFile, writeFile, mkdir, rm } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { normalize, renderIndex, renderDetail, renderCategory, renderStaticPage, staticPages, renderSitemap, slug, ROBOTS } from "./lib.mjs";
+import { normalize, renderIndex, renderDetail, renderCategory, renderStaticPage, staticPages, renderSitemap, searchIndex, slug, ROBOTS } from "./lib.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const DIST = join(ROOT, "dist");
@@ -72,6 +72,7 @@ for (const p of pages) {
 }
 await writeFile(join(DIST, "sitemap.xml"), renderSitemap(alive, today, catPaths), "utf8");
 await writeFile(join(DIST, "robots.txt"), ROBOTS, "utf8");
+await writeFile(join(DIST, "search-index.json"), JSON.stringify(searchIndex(alive)), "utf8");
 
 console.log(`✅ 생성 완료 (기준일 ${today})`);
 console.log(`   index.html 1개`);

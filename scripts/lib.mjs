@@ -1,39 +1,32 @@
-// 공유 유틸: 정규화 + 날짜 + HTML 템플릿
-// 의존성 0 (Node 내장만 사용)
+// 공유 유틸: 정규화 + 날짜 + HTML 템플릿 (의존성 0)
 
 export const SITE = {
-  name: "지원금찾기",
-  tagline: "소상공인·자영업 정부지원금 5분 만에 찾기",
-  // 배포 도메인 (canonical·sitemap·OG태그 기준)
+  name: "지원온",
+  tagline: "소상공인·창업 정부지원금을 한눈에",
   baseUrl: "https://jovial-fairy-eb03cf.netlify.app",
-  desc: "소상공인·자영업자를 위한 정부지원금·정책자금·창업지원사업을 업종·지역별로 쉽게 정리했습니다.",
+  desc: "지원온 — 소상공인·자영업자·예비창업자를 위한 정부·지자체 지원사업을 매일 자동으로 모아 지역·분야별로 쉽게 찾을 수 있는 정보 서비스입니다.",
   // 검색엔진 소유권 확인용 (삭제 금지)
   googleVerification: "C3PipA9O20tJBMXDGbpjp8Yf-stMDBUm57gzBB0rezE",
   naverVerification: "67387dc167dcff6289229d0f0bfd5aaaec2989d9",
-  // 문의/제휴 이메일 (원하는 주소로 교체)
   contactEmail: "hatto3992@gmail.com",
 };
 
+const FAVICON =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%232563eb'/%3E%3Ctext x='32' y='45' font-family='sans-serif' font-size='32' font-weight='700' fill='white' text-anchor='middle'%3E%EC%98%A8%3C/text%3E%3C/svg%3E";
+
 export function escapeHtml(s = "") {
   return String(s)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
+    .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;").replaceAll("'", "&#39;");
 }
 
-// "20260701" | "2026-07-01" | "2026.07.01" → "2026-07-01"
 export function normDate(v) {
   if (!v) return "";
   const digits = String(v).replace(/[^0-9]/g, "");
-  if (digits.length >= 8) {
-    return `${digits.slice(0, 4)}-${digits.slice(4, 6)}-${digits.slice(6, 8)}`;
-  }
+  if (digits.length >= 8) return `${digits.slice(0, 4)}-${digits.slice(4, 6)}-${digits.slice(6, 8)}`;
   return String(v).trim();
 }
 
-// today: "YYYY-MM-DD" 기준 마감까지 남은 일수 (음수면 마감)
 export function daysUntil(endDate, today) {
   if (!endDate) return null;
   const a = Date.parse(endDate + "T00:00:00");
@@ -42,52 +35,37 @@ export function daysUntil(endDate, today) {
   return Math.round((a - b) / 86400000);
 }
 
-// HTML 엔티티 디코드 + 태그 제거 + 공백 정리
 export function cleanText(s = "") {
   return String(s)
     .replace(/<[^>]*>/g, " ")
-    .replaceAll("&apos;", "'")
-    .replaceAll("&quot;", '"')
-    .replaceAll("&lt;", "<")
-    .replaceAll("&gt;", ">")
-    .replaceAll("&nbsp;", " ")
-    .replaceAll("&amp;", "&")
-    .replace(/\s+/g, " ")
-    .trim();
+    .replaceAll("&apos;", "'").replaceAll("&quot;", '"').replaceAll("&lt;", "<")
+    .replaceAll("&gt;", ">").replaceAll("&nbsp;", " ").replaceAll("&amp;", "&")
+    .replace(/\s+/g, " ").trim();
 }
 
 function truncate(s, n) {
   return s.length > n ? s.slice(0, n).trim() + "…" : s;
 }
 
-// 지원사업 공고 원본(기업마당/K-Startup) → 내부 표준 스키마로 정규화
+// 지원사업 공고 원본(기업마당/K-Startup/중기부) → 내부 표준 스키마
 export function normalize(raw) {
-  // 원시값 우선 픽 (숫자 ID 등 clean 불필요)
   const pick = (...keys) => {
     for (const k of keys) {
       if (raw[k] != null && String(raw[k]).trim() !== "") return String(raw[k]).trim();
     }
     return "";
   };
-  // 텍스트 픽 (엔티티/태그 정리)
   const pickC = (...keys) => cleanText(pick(...keys));
 
-  // 신청기간이 "20260701 ~ 20260815" 형태로 한 필드에 오는 경우 분해
   let start = pick("applyStart", "reqstBeginDe", "pbanc_rcpt_bgng_dt", "applicationStartDate");
   let end = pick("applyEnd", "reqstEndDe", "pbanc_rcpt_end_dt", "applicationEndDate");
   const range = pick("reqstBeginEndDe", "applyPeriod");
   if ((!start || !end) && range) {
     const parts = range.split(/[~∼-]/).map((s) => s.trim()).filter(Boolean);
-    if (parts.length >= 2) {
-      start = start || parts[0];
-      end = end || parts[parts.length - 1];
-    }
+    if (parts.length >= 2) { start = start || parts[0]; end = end || parts[parts.length - 1]; }
   }
 
-  // ID: K-Startup는 pbanc_sn(실제 공고번호). raw.id는 행번호라 쓰지 않음.
   const realId = pick("pbanc_sn", "pblancId", "id");
-
-  // 공식 링크: K-Startup은 pbanc_sn으로 딥링크 구성이 가장 안정적
   let url = pick("sourceUrl", "pblancUrl", "biz_gdnc_url", "detl_pg_url", "viewUrl", "rceptEngnHmpgUrl");
   const sn = pick("pbanc_sn");
   if (sn) url = `https://www.k-startup.go.kr/web/contents/bizpbanc-ongoing.do?schM=view&pbancSn=${sn}`;
@@ -113,54 +91,93 @@ export function normalize(raw) {
   };
 }
 
-function hash(s) {
-  let h = 0;
-  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
-  return h;
+function hash(s) { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return h; }
+
+export function slug(s = "") {
+  return String(s).trim().replace(/[^0-9A-Za-z가-힣]+/g, "-").replace(/^-+|-+$/g, "") || "etc";
 }
 
-// ---- HTML 템플릿 ----
+// 마감 빠른 순 정렬(진행중 우선, 마감/미정 뒤)
+function sortForList(list, today) {
+  return list.slice().sort((x, y) => {
+    const dx = daysUntil(x.applyEnd, today), dy = daysUntil(y.applyEnd, today);
+    const ax = dx == null || dx < 0 ? 1 : 0, ay = dy == null || dy < 0 ? 1 : 0;
+    if (ax !== ay) return ax - ay;
+    if (ax === 0) return (x.applyEnd || "9999").localeCompare(y.applyEnd || "9999");
+    return (y.registeredAt || "").localeCompare(x.registeredAt || "");
+  });
+}
 
+// ---- CSS ----
 const CSS = `
-:root{--bg:#fff;--fg:#1a1a1a;--mut:#666;--line:#e8e8e8;--brand:#1b64da;--warn:#d64545;--soft:#f5f7fb}
+:root{--bg:#fff;--fg:#0f172a;--mut:#64748b;--line:#e6e9f0;--soft:#f5f7fc;--brand:#2563eb;--brand-d:#1d4ed8;--brand-soft:#eaf1ff;--warn:#dc2626;--ok:#0e9f6e;--card:#fff;--shadow:0 1px 2px rgba(15,23,42,.04),0 4px 16px rgba(15,23,42,.05);--radius:14px}
 *{box-sizing:border-box}
-body{margin:0;font-family:-apple-system,'Segoe UI',Roboto,'Malgun Gothic',sans-serif;color:var(--fg);background:var(--bg);line-height:1.6}
-a{color:var(--brand);text-decoration:none}
-a:hover{text-decoration:underline}
-.wrap{max-width:820px;margin:0 auto;padding:0 16px}
-header.top{border-bottom:1px solid var(--line);padding:14px 0}
-header.top .brand{font-size:20px;font-weight:800;color:var(--fg)}
-header.top .tag{color:var(--mut);font-size:13px}
-h1{font-size:22px;line-height:1.35;margin:18px 0 6px}
-.meta{color:var(--mut);font-size:13px;margin-bottom:14px}
-.card{display:block;border:1px solid var(--line);border-radius:12px;padding:16px;margin:12px 0;background:#fff;transition:.15s}
-.card:hover{border-color:var(--brand);box-shadow:0 2px 10px rgba(27,100,218,.08);text-decoration:none}
-.card h2{font-size:17px;margin:0 0 6px;color:var(--fg)}
-.tags{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
-.tag{font-size:12px;background:var(--soft);color:#33507d;border-radius:999px;padding:3px 9px}
-.badge{font-size:11px;font-weight:700;border-radius:6px;padding:2px 7px;margin-left:6px;vertical-align:middle}
-.badge.new{background:#e7f1ff;color:var(--brand)}
-.badge.soon{background:#fdecec;color:var(--warn)}
-.summary{color:#333;font-size:14px;margin:6px 0}
-table.info{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px}
-table.info th{text-align:left;width:110px;color:var(--mut);font-weight:600;padding:8px 10px;vertical-align:top;background:var(--soft);border-bottom:1px solid var(--line)}
-table.info td{padding:8px 10px;border-bottom:1px solid var(--line)}
-.cta{display:block;text-align:center;background:var(--brand);color:#fff;border-radius:10px;padding:13px;font-weight:700;margin:18px 0}
-.cta:hover{text-decoration:none;opacity:.92}
-.lead{border:1px dashed var(--line);border-radius:10px;padding:14px;background:var(--soft);font-size:14px;margin:18px 0}
-.notice{background:#fff9e6;border:1px solid #f0e3b0;border-radius:8px;padding:10px 12px;font-size:12.5px;color:#7a6a2f;margin:16px 0}
-footer{border-top:1px solid var(--line);margin-top:28px;padding:18px 0;color:var(--mut);font-size:12.5px}
-.sec{font-size:15px;font-weight:800;margin:22px 0 4px}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Malgun Gothic','Apple SD Gothic Neo',sans-serif;color:var(--fg);background:var(--bg);line-height:1.65;-webkit-font-smoothing:antialiased}
+a{color:var(--brand);text-decoration:none}a:hover{text-decoration:underline}
+.wrap{max-width:960px;margin:0 auto;padding:0 20px}
+header.top{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.85);backdrop-filter:saturate(180%) blur(10px);border-bottom:1px solid var(--line)}
+header.top .bar{display:flex;align-items:center;justify-content:space-between;height:58px}
+.logo{font-size:21px;font-weight:800;letter-spacing:-.02em;color:var(--fg);display:inline-flex;align-items:center;white-space:nowrap;flex-shrink:0}
+.logo b{color:var(--brand)}
+.logo .dot{width:7px;height:7px;border-radius:50%;background:var(--ok);margin-left:5px;box-shadow:0 0 0 3px rgba(14,159,110,.15)}
+nav.gnb{display:flex;gap:4px;align-items:center}
+nav.gnb a{color:var(--mut);font-size:14px;font-weight:600;padding:7px 11px;border-radius:9px}
+nav.gnb a:hover{color:var(--fg);background:var(--soft);text-decoration:none}
+.hero{background:linear-gradient(180deg,var(--brand-soft),transparent);border-bottom:1px solid var(--line);padding:46px 0 32px}
+.hero h1{font-size:32px;line-height:1.25;letter-spacing:-.03em;margin:0 0 10px;font-weight:800}
+.hero .sub{font-size:16px;color:var(--mut);margin:0 0 22px}
+.search{display:flex;gap:8px;max-width:640px}
+.search input{flex:1;font-size:16px;padding:15px 18px;border:1.5px solid var(--line);border-radius:12px;background:var(--card);box-shadow:var(--shadow);outline:none}
+.search input:focus{border-color:var(--brand)}
+.search .sbtn{background:var(--brand);color:#fff;border:none;border-radius:12px;padding:0 22px;font-size:15px;font-weight:700;cursor:pointer}
+.search .sbtn:hover{background:var(--brand-d)}
+.statrow{display:flex;flex-wrap:wrap;gap:26px;margin-top:22px}
+.stat{display:flex;flex-direction:column;color:var(--mut);font-size:13px}
+.stat b{color:var(--fg);font-size:19px;font-weight:800;letter-spacing:-.02em}
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:22px 0 6px}
+select.f{font-size:14px;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--fg);cursor:pointer}
+.sec{font-size:16px;font-weight:800;margin:24px 0 10px;letter-spacing:-.01em}
+.rcount{color:var(--brand);font-weight:800}
+.grid{display:grid;gap:12px}
+.card{display:block;border:1px solid var(--line);border-radius:var(--radius);padding:17px 18px;background:var(--card);box-shadow:var(--shadow);transition:transform .12s,box-shadow .12s,border-color .12s}
+.card:hover{border-color:var(--brand);box-shadow:0 8px 24px rgba(37,99,235,.10);transform:translateY(-2px);text-decoration:none}
+.card h3{font-size:16.5px;line-height:1.4;margin:0 0 8px;color:var(--fg);font-weight:700}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 8px}
+.tag{font-size:12px;background:var(--soft);color:#3b5486;border-radius:999px;padding:4px 10px;font-weight:600}
+.tag.money{background:#eafaf1;color:#0e7a53}
+.badge{font-size:11px;font-weight:800;border-radius:6px;padding:2px 7px;margin-left:7px;vertical-align:middle}
+.badge.soon{background:#fdecec;color:var(--warn)}.badge.new{background:var(--brand-soft);color:var(--brand)}
+.summary{color:#475569;font-size:13.5px;margin:6px 0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card .meta{color:var(--mut);font-size:12.5px;margin-top:6px}
+.meta{color:var(--mut);font-size:13px}
 .chiprow{display:flex;flex-wrap:wrap;gap:7px;margin:8px 0 4px}
-.chip{font-size:13px;background:var(--soft);color:#33507d;border:1px solid var(--line);border-radius:999px;padding:5px 11px}
+.chip{font-size:13px;background:var(--card);color:#3b5486;border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-weight:600;cursor:pointer}
 .chip:hover{border-color:var(--brand);text-decoration:none}
 .chip.chip-on{background:var(--brand);color:#fff;border-color:var(--brand)}
-.chip b{color:var(--mut);font-weight:600;font-size:11px}
-.chip.chip-on b{color:#dbe6ff}
+.chip b{color:var(--mut);font-weight:600;font-size:11px;margin-left:3px}.chip.chip-on b{color:#dbe6ff}
+.crumb{color:var(--mut);font-size:13px;margin:18px 0 6px}
+.dtitle{font-size:25px;line-height:1.3;letter-spacing:-.02em;margin:6px 0 12px;font-weight:800}
+.panel{border:1px solid var(--line);border-radius:var(--radius);background:var(--card);box-shadow:var(--shadow);padding:4px 18px;margin:16px 0}
+table.info{width:100%;border-collapse:collapse;font-size:14.5px}
+table.info th{text-align:left;width:92px;color:var(--mut);font-weight:600;padding:13px 8px;vertical-align:top;border-bottom:1px solid var(--line)}
+table.info td{padding:13px 8px;border-bottom:1px solid var(--line)}
+table.info tr:last-child th,table.info tr:last-child td{border-bottom:none}
+.cta{display:block;text-align:center;background:var(--brand);color:#fff;border-radius:12px;padding:15px;font-weight:800;margin:18px 0;box-shadow:0 6px 18px rgba(37,99,235,.25)}
+.cta:hover{text-decoration:none;background:var(--brand-d)}
+.lead{border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;background:var(--soft);font-size:14px;margin:18px 0}
+.notice{background:#fff8ec;border:1px solid #f2e2b6;border-radius:10px;padding:11px 14px;font-size:12.5px;color:#8a6d23;margin:16px 0}
+.morelinks{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+footer{border-top:1px solid var(--line);margin-top:44px;padding:28px 0 44px;color:var(--mut);font-size:12.5px;background:var(--soft)}
+footer a{color:var(--mut)}footer .fbrand{font-weight:800;color:var(--fg);font-size:15px}
+.rnote{display:none;color:var(--mut);font-size:13px;margin-top:12px;text-align:center}
+h1,h2,h3{letter-spacing:-.01em}
+@media (max-width:560px){.hero h1{font-size:25px}.hero{padding:32px 0 24px}.dtitle{font-size:21px}nav.gnb{gap:0}nav.gnb a{padding:6px 7px;font-size:13px}.logo{font-size:19px}.wrap{padding:0 15px}.statrow{gap:16px}.search .sbtn{padding:0 15px}}
 @media (prefers-color-scheme:dark){
-  :root{--bg:#16181d;--fg:#e9eaed;--mut:#9aa0aa;--line:#2c2f36;--soft:#1e2229}
-  .card,header.top{background:transparent}
-  .tag,.chip{color:#a9c2ef}
+ :root{--bg:#0d1117;--fg:#e8eaed;--mut:#9aa4b2;--line:#232a35;--soft:#161b22;--card:#141a22;--brand:#4f8cff;--brand-d:#3b7bf0;--brand-soft:#152238;--shadow:0 1px 2px rgba(0,0,0,.3),0 4px 16px rgba(0,0,0,.35)}
+ header.top{background:rgba(13,17,23,.85)}
+ .tag{color:#a9c2ef}.tag.money{background:#0f2a1e;color:#57d09a}.summary{color:#aeb6c2}
+ .notice{background:#241f10;border-color:#3d3413;color:#d8c78a}
 }
 `;
 
@@ -170,6 +187,7 @@ function shell({ title, desc, canonical, body, jsonld = "" }) {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="${FAVICON}">
 ${SITE.googleVerification ? `<meta name="google-site-verification" content="${SITE.googleVerification}">` : ""}
 ${SITE.naverVerification ? `<meta name="naver-site-verification" content="${SITE.naverVerification}">` : ""}
 <title>${escapeHtml(title)}</title>
@@ -178,20 +196,26 @@ ${SITE.naverVerification ? `<meta name="naver-site-verification" content="${SITE
 <meta property="og:title" content="${escapeHtml(title)}">
 <meta property="og:description" content="${escapeHtml(desc)}">
 <meta property="og:type" content="website">
+<meta property="og:site_name" content="${SITE.name}">
 <style>${CSS}</style>
 ${jsonld ? `<script type="application/ld+json">${jsonld}</script>` : ""}
 </head>
 <body>
-<header class="top"><div class="wrap">
-  <a class="brand" href="/">${SITE.name}</a>
-  <div class="tag">${escapeHtml(SITE.tagline)}</div>
+<header class="top"><div class="wrap bar">
+  <a class="logo" href="/">지원<b>온</b><span class="dot"></span></a>
+  <nav class="gnb">
+    <a href="/#browse">지역·분야</a>
+    <a href="/about.html">소개</a>
+    <a href="/contact.html">문의</a>
+  </nav>
 </div></header>
-<main class="wrap">
+<main>
 ${body}
 </main>
 <footer><div class="wrap">
-  <p>본 사이트는 <b>공식 정부 사이트가 아닙니다.</b> 공고 정보는 공공데이터포털 등 공개 데이터를 요약·재구성한 것으로,
-  정확한 내용과 신청은 반드시 각 공고의 <b>공식 출처</b>에서 확인하세요.</p>
+  <p class="fbrand">${SITE.name}</p>
+  <p>소상공인·창업 정부지원금을 매일 자동으로 모아 드립니다.</p>
+  <p>본 사이트는 <b>공식 정부 사이트가 아닙니다.</b> 공고 정보는 공공데이터포털 등 공개 데이터를 요약·재구성한 것으로, 정확한 내용과 신청은 반드시 각 공고의 <b>공식 출처</b>에서 확인하세요.</p>
   <p><a href="/about.html">소개</a> · <a href="/privacy.html">개인정보처리방침</a> · <a href="/terms.html">이용약관·면책</a> · <a href="/contact.html">문의·제휴</a></p>
   <p>© ${SITE.name} · 정보 제공 목적</p>
 </div></footer>
@@ -202,32 +226,21 @@ ${body}
 function card(a, today) {
   const d = daysUntil(a.applyEnd, today);
   let badge = "";
-  if (d != null && d >= 0 && d <= 7) badge = `<span class="badge soon">D-${d} 마감임박</span>`;
+  if (d != null && d >= 0 && d <= 7) badge = `<span class="badge soon">D-${d}</span>`;
   else if (isNew(a.registeredAt, today)) badge = `<span class="badge new">NEW</span>`;
   return `<a class="card" href="/g/${encodeURIComponent(a.id)}.html">
-  <h2>${escapeHtml(a.title)}${badge}</h2>
-  <div class="tags">
-    <span class="tag">${escapeHtml(a.field || "지원")}</span>
-    <span class="tag">${escapeHtml(a.region)}</span>
-    <span class="tag">${escapeHtml(a.industry)}</span>
-    ${a.amount ? `<span class="tag">💰 ${escapeHtml(a.amount)}</span>` : ""}
-  </div>
-  <div class="summary">${escapeHtml(a.summary || "")}</div>
-  <div class="meta">신청 ~ ${escapeHtml(a.applyEnd || "상시")} · ${escapeHtml(a.org || a.agency)}</div>
+  <h3>${escapeHtml(a.title)}${badge}</h3>
+  <div class="tags"><span class="tag">${escapeHtml(a.field || "지원")}</span><span class="tag">${escapeHtml(a.region)}</span>${a.amount ? `<span class="tag money">💰 ${escapeHtml(truncate(a.amount, 24))}</span>` : ""}</div>
+  ${a.summary ? `<p class="summary">${escapeHtml(a.summary)}</p>` : ""}
+  <div class="meta">신청 ~ ${escapeHtml(a.applyEnd || "상시")} · ${escapeHtml(a.org || a.agency || "")}</div>
 </a>`;
 }
 
 function isNew(registeredAt, today) {
-  const d = daysUntil(today, registeredAt); // today - registered
+  const d = daysUntil(today, registeredAt);
   return d != null && d >= 0 && d <= 7;
 }
 
-// 카테고리 슬러그 (URL용): 한글/영숫자 유지, 나머지는 -
-export function slug(s = "") {
-  return String(s).trim().replace(/[^0-9A-Za-z가-힣]+/g, "-").replace(/^-+|-+$/g, "") || "etc";
-}
-
-// 지역별/분야별 칩 네비게이션 (cats = {region:[{name,slug,count}], field:[...]})
 function catNav(cats, activeKey = "") {
   const row = (label, kind, arr) =>
     arr && arr.length
@@ -235,34 +248,90 @@ function catNav(cats, activeKey = "") {
           .map((c) => {
             const on = `${kind}:${c.name}` === activeKey ? " chip-on" : "";
             return `<a class="chip${on}" href="/${kind}/${encodeURIComponent(c.slug)}.html">${escapeHtml(c.name)} <b>${c.count}</b></a>`;
-          })
-          .join("")}</div>`
+          }).join("")}</div>`
       : "";
   return row("📍 지역별로 찾기", "r", cats.region) + row("🗂 분야별로 찾기", "c", cats.field);
 }
 
+// 홈: 검색·필터(클라이언트) 클라이언트 스크립트 (자기완결 함수 → 소스 직렬화)
+function CLIENT_FN() {
+  var T = window.__T__;
+  var idx = [], st = { q: "", region: "", field: "", soon: false };
+  var $ = function (s) { return document.querySelector(s); };
+  function dU(e) { if (!e) return null; var a = Date.parse(e + "T00:00:00"), b = Date.parse(T + "T00:00:00"); if (isNaN(a) || isNaN(b)) return null; return Math.round((a - b) / 86400000); }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function bdg(e) { var d = dU(e); return d != null && d >= 0 && d <= 7 ? '<span class="badge soon">D-' + d + "</span>" : ""; }
+  function trc(s, n) { s = String(s || ""); return s.length > n ? s.slice(0, n) + "…" : s; }
+  function cardH(a) {
+    var tags = '<span class="tag">' + esc(a.f || "지원") + '</span><span class="tag">' + esc(a.r) + "</span>" + (a.m ? '<span class="tag money">💰 ' + esc(trc(a.m, 24)) + "</span>" : "");
+    return '<a class="card" href="/g/' + encodeURIComponent(a.id) + '.html"><h3>' + esc(a.t) + bdg(a.e) + '</h3><div class="tags">' + tags + "</div>" + (a.s ? '<p class="summary">' + esc(a.s) + "</p>" : "") + '<div class="meta">신청 ~ ' + esc(a.e || "상시") + " · " + esc(a.o || "") + "</div></a>";
+  }
+  function run() {
+    var q = st.q.trim().toLowerCase();
+    var res = idx.filter(function (a) {
+      if (st.region && a.r !== st.region) return false;
+      if (st.field && a.f !== st.field) return false;
+      if (st.soon) { var d = dU(a.e); if (!(d != null && d >= 0 && d <= 7)) return false; }
+      if (q) { var h = ((a.t || "") + " " + (a.g || "") + " " + (a.r || "") + " " + (a.f || "") + " " + (a.o || "")).toLowerCase(); if (h.indexOf(q) < 0) return false; }
+      return true;
+    });
+    res.sort(function (x, y) {
+      var dx = dU(x.e), dy = dU(y.e), ax = dx == null || dx < 0 ? 1 : 0, ay = dy == null || dy < 0 ? 1 : 0;
+      if (ax !== ay) return ax - ay;
+      if (ax === 0) return (x.e || "9999").localeCompare(y.e || "9999");
+      return (y.n || "").localeCompare(x.n || "");
+    });
+    var cnt = $("#rcount"); if (cnt) cnt.textContent = res.length.toLocaleString();
+    var CAP = 120, box = $("#results");
+    box.innerHTML = res.slice(0, CAP).map(cardH).join("") || '<p class="meta">조건에 맞는 지원사업이 없어요. 검색어나 필터를 바꿔보세요.</p>';
+    var note = $("#rnote"); if (note) note.style.display = res.length > CAP ? "block" : "none";
+  }
+  function wire() {
+    var q = $("#q"); if (q) { var t; q.addEventListener("input", function () { st.q = q.value; clearTimeout(t); t = setTimeout(run, 160); }); }
+    var b = $("#sbtn"); if (b) b.addEventListener("click", function () { run(); var r = $("#results"); if (r) r.scrollIntoView({ behavior: "smooth", block: "start" }); });
+    var rr = $("#fRegion"); if (rr) rr.addEventListener("change", function () { st.region = rr.value; run(); });
+    var ff = $("#fField"); if (ff) ff.addEventListener("change", function () { st.field = ff.value; run(); });
+    var sn = $("#fSoon"); if (sn) sn.addEventListener("click", function () { st.soon = !st.soon; sn.classList.toggle("chip-on", st.soon); run(); });
+  }
+  fetch("/search-index.json").then(function (r) { return r.json(); }).then(function (d) { idx = d; wire(); run(); }).catch(function () {});
+}
+
 export function renderIndex(list, today, cats = { region: [], field: [] }) {
-  const soon = list
-    .filter((a) => {
-      const d = daysUntil(a.applyEnd, today);
-      return d != null && d >= 0 && d <= 7;
-    })
-    .sort((x, y) => (x.applyEnd || "").localeCompare(y.applyEnd || ""));
-  const rest = list
-    .filter((a) => !soon.includes(a))
-    .sort((x, y) => (y.registeredAt || "").localeCompare(x.registeredAt || ""));
-  const recent = rest.slice(0, 80);
+  const sorted = sortForList(list, today);
+  const ssr = sorted.slice(0, 60).map((a) => card(a, today)).join("");
+  const opt = (arr) => arr.map((c) => `<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)} (${c.count})</option>`).join("");
 
   const body = `
-  <h1>소상공인·창업 정부지원사업 모음</h1>
-  <div class="meta">총 ${list.length}건 · 매일 자동 업데이트 · 기준일 ${today}</div>
-  <div class="lead">💡 <b>지역·분야</b>로 좁혀서 보세요. 각 공고에서 "누가 / 얼마 / 언제까지 / 어떻게"를 정리해 드립니다.</div>
+<section class="hero"><div class="wrap">
+  <h1>흩어진 정부지원금,<br>${SITE.name}에서 한 번에 찾으세요</h1>
+  <p class="sub">소상공인·자영업·예비창업자를 위한 정부·지자체 지원사업을 매일 자동으로 모읍니다.</p>
+  <div class="search">
+    <input id="q" type="search" placeholder="🔍 사업명·지역·분야로 검색 (예: 서울 창업, 소상공인 자금)" aria-label="지원사업 검색">
+    <button class="sbtn" id="sbtn">검색</button>
+  </div>
+  <div class="statrow">
+    <div class="stat"><b>${list.length.toLocaleString()}</b>진행 중 지원사업</div>
+    <div class="stat"><b>${cats.region.length}</b>개 지역</div>
+    <div class="stat"><b>${cats.field.length}</b>개 분야</div>
+    <div class="stat"><b>매일</b>자동 업데이트</div>
+  </div>
+</div></section>
+
+<div class="wrap">
+  <div class="filters">
+    <select class="f" id="fRegion"><option value="">📍 지역 전체</option>${opt(cats.region)}</select>
+    <select class="f" id="fField"><option value="">🗂 분야 전체</option>${opt(cats.field)}</select>
+    <span class="chip" id="fSoon">⏰ 마감임박만</span>
+  </div>
+  <div class="sec">지원사업 <span id="rcount" class="rcount">${list.length.toLocaleString()}</span>건</div>
+  <div class="grid" id="results">${ssr}</div>
+  <p class="rnote" id="rnote">더 많은 결과가 있어요. 위 검색·필터로 좁혀보세요.</p>
+
+  <div id="browse"></div>
   ${catNav(cats)}
-  ${soon.length ? `<div class="sec">⏰ 이번 주 마감임박</div>${soon.map((a) => card(a, today)).join("")}` : ""}
-  <div class="sec">🆕 최신 지원사업 ${rest.length > recent.length ? `(최근 ${recent.length}건)` : ""}</div>
-  ${recent.map((a) => card(a, today)).join("")}
-  ${rest.length > recent.length ? `<p class="meta">더 많은 지원사업은 위의 <b>지역별·분야별</b>에서 확인하세요.</p>` : ""}
-  `;
+</div>
+<script>window.__T__=${JSON.stringify(today)};(${CLIENT_FN.toString()})();</script>`;
+
   return shell({
     title: `${SITE.name} — ${SITE.tagline}`,
     desc: SITE.desc,
@@ -271,29 +340,22 @@ export function renderIndex(list, today, cats = { region: [], field: [] }) {
   });
 }
 
-// 지역별/분야별 landing 페이지
 export function renderCategory({ kind, name, items, today, cats }) {
   const labelKo = kind === "r" ? "지역" : "분야";
-  const sorted = items.slice().sort((x, y) => {
-    const dx = daysUntil(x.applyEnd, today), dy = daysUntil(y.applyEnd, today);
-    const ax = dx == null || dx < 0 ? 1 : 0, ay = dy == null || dy < 0 ? 1 : 0;
-    if (ax !== ay) return ax - ay;
-    return (x.applyEnd || "9999").localeCompare(y.applyEnd || "9999");
-  });
+  const sorted = sortForList(items, today);
   const h1 = kind === "r" ? `${name} 창업·소상공인 지원사업 모음` : `${name} 분야 창업지원사업 모음`;
-  const intro =
-    kind === "r"
-      ? `${name} 지역 소상공인·예비창업자가 신청할 수 있는 정부·지자체 지원사업 ${items.length}건을 모았습니다. 마감 임박 순으로 정리했으니 놓치지 마세요.`
-      : `'${name}' 분야의 창업·소상공인 지원사업 ${items.length}건입니다. 대상·금액·신청기간을 한눈에 확인하고 바로 신청하세요.`;
-  const body = `
-  <p class="meta"><a href="/">홈</a> › ${labelKo}별 › ${escapeHtml(name)}</p>
-  <h1>${escapeHtml(h1)}</h1>
+  const intro = kind === "r"
+    ? `${name} 지역 소상공인·예비창업자가 신청할 수 있는 정부·지자체 지원사업 ${items.length}건을 모았습니다. 마감 임박 순으로 정리했으니 놓치지 마세요.`
+    : `'${name}' 분야의 창업·소상공인 지원사업 ${items.length}건입니다. 대상·금액·신청기간을 한눈에 확인하고 바로 신청하세요.`;
+  const body = `<div class="wrap">
+  <p class="crumb"><a href="/">홈</a> › ${labelKo}별 › ${escapeHtml(name)}</p>
+  <h1 class="dtitle">${escapeHtml(h1)}</h1>
   <div class="lead">${escapeHtml(intro)}</div>
   ${catNav(cats, `${kind}:${name}`)}
   <div class="sec">📋 ${escapeHtml(name)} 지원사업 ${items.length}건</div>
-  ${sorted.map((a) => card(a, today)).join("")}
-  <p><a href="/">← 전체 지원사업 보기</a></p>
-  `;
+  <div class="grid">${sorted.map((a) => card(a, today)).join("")}</div>
+  <p style="margin-top:18px"><a href="/">← 전체 지원사업 보기</a></p>
+</div>`;
   return shell({
     title: `${name} 지원사업 ${items.length}건 | ${SITE.name}`,
     desc: intro,
@@ -304,10 +366,10 @@ export function renderCategory({ kind, name, items, today, cats }) {
 
 export function renderDetail(a, today) {
   const d = daysUntil(a.applyEnd, today);
-  const dtxt = d == null ? "상시/미정" : d < 0 ? "마감됨" : `마감 D-${d}`;
+  const dtxt = d == null ? "상시/미정" : d < 0 ? "마감됨" : `D-${d}`;
+  const badge = d != null && d >= 0 && d <= 7 ? `<span class="badge soon">${dtxt} 마감임박</span>` : "";
   const faq = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
+    "@context": "https://schema.org", "@type": "FAQPage",
     mainEntity: [
       { "@type": "Question", name: `${a.title} 지원 대상은?`, acceptedAnswer: { "@type": "Answer", text: a.target || "공고 원문 참고" } },
       { "@type": "Question", name: "지원 금액은 얼마인가요?", acceptedAnswer: { "@type": "Answer", text: a.amount || "공고 원문 참고" } },
@@ -315,38 +377,43 @@ export function renderDetail(a, today) {
       { "@type": "Question", name: "어떻게 신청하나요?", acceptedAnswer: { "@type": "Answer", text: a.howto || "공식 출처에서 신청" } },
     ],
   };
-  const body = `
-  <h1>${escapeHtml(a.title)}</h1>
-  <div class="tags">
-    <span class="tag">${escapeHtml(a.field || "지원")}</span>
-    <span class="tag">${escapeHtml(a.region)}</span>
-    <span class="tag">${escapeHtml(a.industry)}</span>
-    <span class="tag">${escapeHtml(dtxt)}</span>
-  </div>
-  <p class="summary">${escapeHtml(a.summary || "")}</p>
-  <div class="sec">한눈에 보기 (누가 / 얼마 / 언제까지 / 어떻게)</div>
-  <table class="info">
+  const body = `<div class="wrap">
+  <p class="crumb"><a href="/">홈</a> › <a href="/r/${encodeURIComponent(slug(a.region))}.html">${escapeHtml(a.region)}</a> › 지원사업</p>
+  <h1 class="dtitle">${escapeHtml(a.title)}${badge}</h1>
+  <div class="tags"><span class="tag">${escapeHtml(a.field || "지원")}</span><span class="tag">${escapeHtml(a.region)}</span>${a.amount ? `<span class="tag money">💰 ${escapeHtml(truncate(a.amount, 30))}</span>` : ""}</div>
+  ${a.summary ? `<p class="summary" style="-webkit-line-clamp:unset;color:var(--fg);font-size:15px;margin:14px 0">${escapeHtml(a.summary)}</p>` : ""}
+  <div class="sec">한눈에 보기 · 누가 / 얼마 / 언제까지 / 어떻게</div>
+  <div class="panel"><table class="info">
     <tr><th>지원 대상</th><td>${escapeHtml(a.target || "-")}</td></tr>
-    <tr><th>지원 금액</th><td>${escapeHtml(a.amount || "-")}</td></tr>
-    <tr><th>신청 기간</th><td>${escapeHtml(a.applyStart || "-")} ~ ${escapeHtml(a.applyEnd || "상시")}</td></tr>
-    <tr><th>신청 방법</th><td>${escapeHtml(a.howto || "공식 출처에서 신청")}</td></tr>
+    <tr><th>지원 내용</th><td>${escapeHtml(a.amount || "공고 참고")}</td></tr>
+    <tr><th>신청 기간</th><td>${escapeHtml(a.applyStart || "-")} ~ ${escapeHtml(a.applyEnd || "상시")} ${d != null && d >= 0 ? `<b style="color:var(--warn)">(${dtxt})</b>` : ""}</td></tr>
+    <tr><th>신청 방법</th><td>${escapeHtml(a.howto || "아래 '공식 공고문'에서 신청")}</td></tr>
     <tr><th>주관/수행</th><td>${escapeHtml([a.agency, a.org].filter(Boolean).join(" / ") || "-")}</td></tr>
-  </table>
-  ${a.sourceUrl ? `<a class="cta" href="${escapeHtml(a.sourceUrl)}" target="_blank" rel="noopener">📄 공식 공고문 보러가기</a>` : ""}
-  <div class="lead">
-    <b>🧑‍💼 이 지원금, 내가 받을 수 있을지 헷갈리시나요?</b><br>
-    세무·정책자금 전문가에게 무료로 물어보세요. <i>(제휴 상담 영역 — 추후 리드폼 연결)</i>
+  </table></div>
+  ${a.sourceUrl ? `<a class="cta" href="${escapeHtml(a.sourceUrl)}" target="_blank" rel="noopener">📄 공식 공고문에서 신청하기 →</a>` : ""}
+  <div class="lead"><b>🧑‍💼 이 지원금, 내가 받을 수 있을지 헷갈리시나요?</b><br>세무·정책자금 전문가에게 무료로 물어보세요. <i>(제휴 상담 — 추후 연결 예정)</i></div>
+  <div class="morelinks">
+    <a class="chip" href="/r/${encodeURIComponent(slug(a.region))}.html">📍 ${escapeHtml(a.region)} 지원사업 더 보기</a>
+    ${a.field ? `<a class="chip" href="/c/${encodeURIComponent(slug(a.field))}.html">🗂 ${escapeHtml(a.field)} 더 보기</a>` : ""}
   </div>
   <div class="notice">⚠️ 지원 조건·마감은 변경될 수 있습니다. 신청 전 반드시 공식 공고문을 확인하세요.</div>
-  <p><a href="/">← 다른 지원금 더 보기</a></p>
-  `;
+  <p><a href="/">← 다른 지원사업 검색하기</a></p>
+</div>`;
   return shell({
     title: `${a.title} | ${SITE.name}`,
     desc: `${a.title} — 대상: ${a.target || "소상공인"} / 금액: ${a.amount || "공고 참고"} / 신청 ~${a.applyEnd || "상시"}`,
     canonical: `${SITE.baseUrl}/g/${encodeURIComponent(a.id)}.html`,
-    body,
-    jsonld: JSON.stringify(faq),
+    body, jsonld: JSON.stringify(faq),
   });
+}
+
+// 홈 검색용 인덱스 (경량 필드)
+export function searchIndex(list) {
+  return list.map((a) => ({
+    id: a.id, t: a.title, r: a.region, f: a.field, m: a.amount,
+    e: a.applyEnd, o: a.org || a.agency || "", s: a.summary || "",
+    g: (a.target || "").slice(0, 80), n: a.registeredAt || "",
+  }));
 }
 
 export function renderSitemap(list, today, extraPaths = []) {
@@ -355,9 +422,7 @@ export function renderSitemap(list, today, extraPaths = []) {
     ...extraPaths.map((p) => `${SITE.baseUrl}${p}`),
     ...list.map((a) => `${SITE.baseUrl}/g/${encodeURIComponent(a.id)}.html`),
   ];
-  const items = urls
-    .map((u) => `  <url><loc>${u}</loc><lastmod>${today}</lastmod></url>`)
-    .join("\n");
+  const items = urls.map((u) => `  <url><loc>${u}</loc><lastmod>${today}</lastmod></url>`).join("\n");
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${items}
@@ -369,23 +434,20 @@ Allow: /
 Sitemap: ${SITE.baseUrl}/sitemap.xml
 `;
 
-// 정적 안내 페이지 (소개/개인정보/약관/문의)
 export function renderStaticPage({ path, title, desc, bodyHtml }) {
   return shell({
     title: `${title} | ${SITE.name}`,
     desc: desc || title,
     canonical: `${SITE.baseUrl}${path}`,
-    body: `<p class="meta"><a href="/">홈</a> › ${escapeHtml(title)}</p>\n<h1>${escapeHtml(title)}</h1>\n${bodyHtml}`,
+    body: `<div class="wrap"><p class="crumb"><a href="/">홈</a> › ${escapeHtml(title)}</p>\n<h1 class="dtitle">${escapeHtml(title)}</h1>\n${bodyHtml}</div>`,
   });
 }
 
-// 4개 안내 페이지 콘텐츠 생성 (today = 시행일)
 export function staticPages(today) {
   const email = SITE.contactEmail || "(문의 이메일 준비 중)";
   return [
     {
-      path: "/about.html",
-      title: "소개",
+      path: "/about.html", title: "소개",
       desc: `${SITE.name}는 소상공인·예비창업자를 위해 정부·공공기관 지원사업 공고를 모아 쉽게 정리하는 정보 서비스입니다.`,
       bodyHtml: `
 <p><b>${SITE.name}</b>는 소상공인·자영업자·예비창업자가 자신에게 맞는 <b>정부·공공기관 지원사업</b>을 빠르게 찾도록 돕는 정보 서비스입니다.</p>
@@ -397,9 +459,7 @@ export function staticPages(today) {
 <p><a href="/">← 지원사업 둘러보기</a></p>`,
     },
     {
-      path: "/privacy.html",
-      title: "개인정보처리방침",
-      desc: `${SITE.name} 개인정보처리방침`,
+      path: "/privacy.html", title: "개인정보처리방침", desc: `${SITE.name} 개인정보처리방침`,
       bodyHtml: `
 <p>${SITE.name}(이하 "사이트")는 이용자의 개인정보를 중요하게 생각하며, 아래와 같이 처리방침을 안내합니다. (시행일: ${today})</p>
 <div class="sec">1. 수집하는 개인정보</div>
@@ -413,9 +473,7 @@ export function staticPages(today) {
 <p><a href="/">← 홈으로</a></p>`,
     },
     {
-      path: "/terms.html",
-      title: "이용약관·면책",
-      desc: `${SITE.name} 이용약관 및 면책 고지`,
+      path: "/terms.html", title: "이용약관·면책", desc: `${SITE.name} 이용약관 및 면책 고지`,
       bodyHtml: `
 <div class="sec">정보 제공 목적</div>
 <p>본 사이트가 제공하는 모든 정보는 <b>참고용</b>이며, 지원사업의 정확성·완전성을 보증하지 않습니다. 최종 지원 조건·마감·자격은 반드시 각 공고의 <b>공식 출처</b>에서 확인하시기 바랍니다.</p>
@@ -428,15 +486,13 @@ export function staticPages(today) {
 <p><a href="/">← 홈으로</a></p>`,
     },
     {
-      path: "/contact.html",
-      title: "문의·제휴",
-      desc: `${SITE.name} 문의 및 제휴 안내`,
+      path: "/contact.html", title: "문의·제휴", desc: `${SITE.name} 문의 및 제휴 안내`,
       bodyHtml: `
 <p>서비스 개선 제안, 오류 신고, 광고·제휴 문의를 환영합니다.</p>
-<table class="info">
+<div class="panel"><table class="info">
   <tr><th>이메일</th><td>${escapeHtml(email)}</td></tr>
   <tr><th>운영</th><td>${SITE.name} 운영팀</td></tr>
-</table>
+</table></div>
 <p>공고 정보의 오류나 마감된 사업을 발견하시면 알려주세요. 빠르게 반영하겠습니다.</p>
 <p><a href="/">← 홈으로</a></p>`,
     },
