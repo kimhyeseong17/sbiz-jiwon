@@ -172,6 +172,32 @@ footer{border-top:1px solid var(--line);margin-top:44px;padding:28px 0 44px;colo
 footer a{color:var(--mut)}footer .fbrand{font-weight:800;color:var(--fg);font-size:15px}
 .rnote{display:none;color:var(--mut);font-size:13px;margin-top:12px;text-align:center}
 h1,h2,h3{letter-spacing:-.01em}
+.stitle{font-size:21px;font-weight:800;margin:38px 0 2px;letter-spacing:-.02em}
+.stitle span{display:block;font-size:14px;font-weight:500;color:var(--mut);margin-top:5px}
+.trust{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:22px 0 8px}
+.ti{border:1px solid var(--line);border-radius:12px;background:var(--card);padding:15px 16px;box-shadow:var(--shadow)}
+.ti b{display:block;font-size:14px;margin-bottom:3px}.ti .ck{color:var(--ok);font-weight:800;margin-right:5px}
+.ti p{margin:0;font-size:12.5px;color:var(--mut);line-height:1.5}
+.catcards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:14px 0}
+.catcard{display:block;border:1px solid var(--line);border-radius:14px;background:var(--card);box-shadow:var(--shadow);padding:16px 17px;transition:transform .12s,box-shadow .12s,border-color .12s}
+.catcard:hover{border-color:var(--brand);transform:translateY(-2px);box-shadow:0 8px 24px rgba(37,99,235,.10);text-decoration:none}
+.catcard .ic{font-size:23px}
+.catcard h3{margin:9px 0 3px;font-size:15.5px;color:var(--fg)}
+.catcard p{margin:0;font-size:12.5px;color:var(--mut);line-height:1.5}
+.catcard .cnt{display:inline-block;margin-top:9px;font-size:12px;font-weight:800;color:var(--brand);background:var(--brand-soft);border-radius:999px;padding:2px 10px}
+.how{margin:8px 0}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:14px}
+.step{border:1px solid var(--line);border-radius:14px;background:var(--card);padding:18px;box-shadow:var(--shadow)}
+.step .n{width:30px;height:30px;border-radius:50%;background:var(--brand);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:15px}
+.step h3{margin:11px 0 4px;font-size:15.5px}.step p{margin:0;font-size:13px;color:var(--mut);line-height:1.55}
+.faq details{border:1px solid var(--line);border-radius:12px;background:var(--card);padding:0 16px;margin:10px 0;box-shadow:var(--shadow)}
+.faq summary{cursor:pointer;font-weight:700;padding:15px 0;font-size:15px;list-style:none}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";float:right;color:var(--mut);font-weight:800;font-size:18px}
+.faq details[open] summary::after{content:"−"}
+.faq p{margin:0 0 15px;font-size:14px;color:#475569;line-height:1.6}
+@media (max-width:640px){.trust,.catcards,.steps{grid-template-columns:1fr}}
+@media (prefers-color-scheme:dark){.faq p{color:#aeb6c2}}
 @media (max-width:560px){.hero h1{font-size:25px}.hero{padding:32px 0 24px}.dtitle{font-size:21px}nav.gnb{gap:0}nav.gnb a{padding:6px 7px;font-size:13px}.logo{font-size:19px}.wrap{padding:0 15px}.statrow{gap:16px}.search .sbtn{padding:0 15px}}
 @media (prefers-color-scheme:dark){
  :root{--bg:#0d1117;--fg:#e8eaed;--mut:#9aa4b2;--line:#232a35;--soft:#161b22;--card:#141a22;--brand:#4f8cff;--brand-d:#3b7bf0;--brand-soft:#152238;--shadow:0 1px 2px rgba(0,0,0,.3),0 4px 16px rgba(0,0,0,.35)}
@@ -296,15 +322,45 @@ function CLIENT_FN() {
   fetch("/search-index.json").then(function (r) { return r.json(); }).then(function (d) { idx = d; wire(); run(); }).catch(function () {});
 }
 
+const FIELD_META = {
+  "사업화": { ic: "🚀", d: "시제품 제작·마케팅 등 사업화 자금" },
+  "멘토링ㆍ컨설팅ㆍ교육": { ic: "🧑‍🏫", d: "전문가 멘토링·컨설팅·교육" },
+  "시설ㆍ공간ㆍ보육": { ic: "🏢", d: "사무공간·입주·창업보육" },
+  "행사ㆍ네트워크": { ic: "🤝", d: "데모데이·네트워킹·행사" },
+  "창업교육": { ic: "📚", d: "창업 기초·실전 교육 과정" },
+  "판로ㆍ해외진출": { ic: "📦", d: "판로개척·수출·해외진출" },
+  "글로벌": { ic: "🌍", d: "해외 진출·글로벌 프로그램" },
+  "기술개발(R&D)": { ic: "🔬", d: "기술개발 R&D 자금" },
+  "중기부 지원사업": { ic: "🏛", d: "중소벤처기업부 지원 공고" },
+  "정책자금": { ic: "💰", d: "융자·정책자금 지원" },
+  "융자ㆍ보증": { ic: "🏦", d: "융자·신용보증 지원" },
+  "인력": { ic: "👥", d: "인력 채용·양성 지원" },
+};
+
+const FAQ = [
+  { q: "지원온은 어떤 서비스인가요?", a: "소상공인·자영업자·예비창업자를 위한 정부·지자체 지원사업을 매일 자동으로 모아 지역·분야별로 쉽게 찾도록 정리하는 정보 서비스입니다. 공식 정부 사이트는 아닙니다." },
+  { q: "정보는 정확한가요?", a: "공공데이터포털(K-Startup·중소벤처기업부 등)의 공식 오픈API를 기반으로 매일 갱신합니다. 다만 지원 조건·마감은 변경될 수 있어, 신청 전 각 지원사업의 공식 공고문을 반드시 확인하셔야 합니다." },
+  { q: "신청은 어디서 하나요?", a: "각 지원사업 상세페이지의 '공식 공고문' 버튼을 누르면 해당 기관의 공식 신청 페이지로 이동합니다. 지원온은 신청 대행이나 정책자금 중개를 하지 않습니다." },
+  { q: "이용 요금이 있나요?", a: "무료입니다. 회원가입 없이 모든 지원사업 정보를 열람할 수 있습니다." },
+];
+
 export function renderIndex(list, today, cats = { region: [], field: [] }) {
   const sorted = sortForList(list, today);
   const ssr = sorted.slice(0, 60).map((a) => card(a, today)).join("");
   const opt = (arr) => arr.map((c) => `<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)} (${c.count})</option>`).join("");
 
+  const fieldCards = cats.field.slice(0, 9).map((c) => {
+    const m = FIELD_META[c.name] || { ic: "📋", d: "지원사업 모음" };
+    return `<a class="catcard" href="/c/${encodeURIComponent(c.slug)}.html"><div class="ic">${m.ic}</div><h3>${escapeHtml(c.name)}</h3><p>${escapeHtml(m.d)}</p><span class="cnt">${c.count}건</span></a>`;
+  }).join("");
+  const regionChips = cats.region.map((c) => `<a class="chip" href="/r/${encodeURIComponent(c.slug)}.html">${escapeHtml(c.name)} <b>${c.count}</b></a>`).join("");
+
+  const faqLd = { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: FAQ.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })) };
+
   const body = `
 <section class="hero"><div class="wrap">
   <h1>흩어진 정부지원금,<br>${SITE.name}에서 한 번에 찾으세요</h1>
-  <p class="sub">소상공인·자영업·예비창업자를 위한 정부·지자체 지원사업을 매일 자동으로 모읍니다.</p>
+  <p class="sub">소상공인·자영업·예비창업자를 위한 정부·지자체 지원사업을 <b>공공데이터 기반</b>으로 매일 자동 정리합니다.</p>
   <div class="search">
     <input id="q" type="search" placeholder="🔍 사업명·지역·분야로 검색 (예: 서울 창업, 소상공인 자금)" aria-label="지원사업 검색">
     <button class="sbtn" id="sbtn">검색</button>
@@ -318,17 +374,41 @@ export function renderIndex(list, today, cats = { region: [], field: [] }) {
 </div></section>
 
 <div class="wrap">
+  <div class="trust">
+    <div class="ti"><b><span class="ck">✓</span>공공데이터 출처 공개</b><p>K-Startup·중소벤처기업부 등 공식 공공데이터를 사용합니다.</p></div>
+    <div class="ti"><b><span class="ck">✓</span>매일 자동 업데이트</b><p>새 공고와 마감 정보를 매일 갱신해 최신 상태를 유지합니다.</p></div>
+    <div class="ti"><b><span class="ck">✓</span>공식 공고 링크 제공</b><p>각 지원사업의 공식 신청 페이지로 바로 연결합니다.</p></div>
+  </div>
+
+  <h2 class="stitle">분야별로 골라보세요<span>내 상황에 맞는 지원사업을 빠르게 찾을 수 있어요</span></h2>
+  <div class="catcards">${fieldCards}</div>
+
+  <h2 class="stitle" id="browse">전체 지원사업 검색<span>지역·분야·키워드로 원하는 지원금을 즉시 필터링하세요</span></h2>
   <div class="filters">
     <select class="f" id="fRegion"><option value="">📍 지역 전체</option>${opt(cats.region)}</select>
     <select class="f" id="fField"><option value="">🗂 분야 전체</option>${opt(cats.field)}</select>
     <span class="chip" id="fSoon">⏰ 마감임박만</span>
   </div>
-  <div class="sec">지원사업 <span id="rcount" class="rcount">${list.length.toLocaleString()}</span>건</div>
+  <div class="sec" style="margin-top:12px">검색 결과 <span id="rcount" class="rcount">${list.length.toLocaleString()}</span>건</div>
   <div class="grid" id="results">${ssr}</div>
   <p class="rnote" id="rnote">더 많은 결과가 있어요. 위 검색·필터로 좁혀보세요.</p>
 
-  <div id="browse"></div>
-  ${catNav(cats)}
+  <h2 class="stitle">지역별로 찾기<span>내 지역의 소상공인·창업 지원사업 모음</span></h2>
+  <div class="chiprow">${regionChips}</div>
+
+  <section class="how">
+    <h2 class="stitle">지원온, 이렇게 이용하세요<span>복잡한 정부지원금, 3단계로 끝</span></h2>
+    <div class="steps">
+      <div class="step"><div class="n">1</div><h3>검색·필터</h3><p>지역·분야·키워드로 내게 맞는 지원사업을 빠르게 찾습니다.</p></div>
+      <div class="step"><div class="n">2</div><h3>핵심 요약 확인</h3><p>누가·얼마·언제까지·어떻게를 한눈에 확인합니다.</p></div>
+      <div class="step"><div class="n">3</div><h3>공식 신청</h3><p>공식 공고문 링크로 이동해 바로 신청합니다.</p></div>
+    </div>
+  </section>
+
+  <section class="faq">
+    <h2 class="stitle">자주 묻는 질문</h2>
+    ${FAQ.map((f) => `<details><summary>${escapeHtml(f.q)}</summary><p>${escapeHtml(f.a)}</p></details>`).join("")}
+  </section>
 </div>
 <script>window.__T__=${JSON.stringify(today)};(${CLIENT_FN.toString()})();</script>`;
 
@@ -337,6 +417,7 @@ export function renderIndex(list, today, cats = { region: [], field: [] }) {
     desc: SITE.desc,
     canonical: SITE.baseUrl + "/",
     body,
+    jsonld: JSON.stringify(faqLd),
   });
 }
 
