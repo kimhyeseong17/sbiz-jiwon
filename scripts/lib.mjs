@@ -3,7 +3,7 @@
 export const SITE = {
   name: "지원온",
   tagline: "소상공인·창업 정부지원금을 한눈에",
-  baseUrl: "https://jovial-fairy-eb03cf.netlify.app",
+  baseUrl: "https://jiweon-on.netlify.app",
   desc: "지원온 — 소상공인·자영업자·예비창업자를 위한 정부·지자체 지원사업을 매일 자동으로 모아 지역·분야별로 쉽게 찾을 수 있는 정보 서비스입니다.",
   // 검색엔진 소유권 확인용 (삭제 금지)
   googleVerification: "C3PipA9O20tJBMXDGbpjp8Yf-stMDBUm57gzBB0rezE",
