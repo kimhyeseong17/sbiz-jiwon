@@ -2551,7 +2551,7 @@
   },
   {
     "id": "178275",
-    "title": "수원도시재단 「2026 창업오디션」 모집",
+    "title": "수원도시재단 「2026 창업오디션」 모집 수정 공고",
     "field": "행사ㆍ네트워크",
     "agency": "수원도시재단",
     "org": "창업지원센터",
@@ -2560,7 +2560,7 @@
     "industry": "전업종",
     "amount": "",
     "applyStart": "2026-06-25",
-    "applyEnd": "2026-07-27",
+    "applyEnd": "2026-08-03",
     "registeredAt": "",
     "sourceUrl": "https://www.k-startup.go.kr/web/contents/bizpbanc-ongoing.do?schM=view&pbancSn=178275",
     "howto": "",
@@ -25770,5 +25770,39 @@
     "sourceUrl": "https://www.mss.go.kr/site/smba/ex/bbs/View.do?cbIdx=310&bcIdx=1070051",
     "howto": "",
     "summary": "2026년 방산 특화 창업중심대학 창업기업을 모집하오니 많은 참여 바랍니다. 자세한 사항은 붙임의 공고문을 확인해주시기 바랍니다. 감사합니다."
+  },
+  {
+    "id": "178644",
+    "title": "2026 GH 베이스캠프 참여기업 모집공고",
+    "field": "행사ㆍ네트워크",
+    "agency": "경기주택도시공사",
+    "org": "공공건축사업처",
+    "target": "제1, 2판교에 소재지를 두고 있는 기업",
+    "region": "경기",
+    "industry": "전업종",
+    "amount": "",
+    "applyStart": "2026-07-09",
+    "applyEnd": "2026-08-03",
+    "registeredAt": "",
+    "sourceUrl": "https://www.k-startup.go.kr/web/contents/bizpbanc-ongoing.do?schM=view&pbancSn=178644",
+    "howto": "",
+    "summary": "글로벌 진출을 희망하는 판교 스타트업·기업의 글로벌 시장개척 및 사업화 지원을 위한 2026년 GH 베이스캠프 참여 대상기업을 모집하오니 많은 관심과 참여를 바랍니다."
+  },
+  {
+    "id": "178506",
+    "title": "2026년 재창업 활성화 유공포상 공고(재창업기업, 재창업 지원 부문)",
+    "field": "행사ㆍ네트워크",
+    "agency": "중소벤처기업부 장관",
+    "org": "예비재도전실",
+    "target": "1. 재창업기업 부문: 재창업 활성화 및 국가 경제에 기여한 공로가 있는 재창업기업 대표(공고일 기준 업력 7년 이내) 2. 재창업 지원 부문: 재창업 활성화(재창업자 발굴 · 지원, 연구, 정책개발, 투자 등) 및 분위기 조성에 기여한 공적이 있는 재창업 지원기관 소속 임직원 및 재창업 활성화에 기여한 자",
+    "region": "전국",
+    "industry": "전업종",
+    "amount": "",
+    "applyStart": "2026-07-27",
+    "applyEnd": "2026-08-26",
+    "registeredAt": "",
+    "sourceUrl": "https://www.k-startup.go.kr/web/contents/bizpbanc-ongoing.do?schM=view&pbancSn=178506",
+    "howto": "",
+    "summary": "『2026년 재창업 활성화 유공포상』을 다음과 같이 공고하오니 많은 관심과 참여 바랍니다."
   }
 ]
