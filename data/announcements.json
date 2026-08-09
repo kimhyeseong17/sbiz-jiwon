@@ -26402,7 +26402,7 @@
   },
   {
     "id": "178677",
-    "title": "[한양대학교] 2026년 제23기 한양스타트업아카데미 교육생 모집",
+    "title": "(모집기간 연장)[한양대학교] 2026년 제23기 한양스타트업아카데미 교육생 모집(~8. 11.(화) 15:00까지)",
     "field": "사업화",
     "agency": "한양대학교 창업지원단",
     "org": "창업지원단",
@@ -26411,7 +26411,7 @@
     "industry": "전업종",
     "amount": "",
     "applyStart": "2026-07-22",
-    "applyEnd": "2026-08-07",
+    "applyEnd": "2026-08-11",
     "registeredAt": "",
     "sourceUrl": "https://www.k-startup.go.kr/web/contents/bizpbanc-ongoing.do?schM=view&pbancSn=178677",
     "howto": "",
@@ -28286,5 +28286,22 @@
     "sourceUrl": "https://www.mss.go.kr/site/smba/ex/bbs/View.do?cbIdx=310&bcIdx=1070326",
     "howto": "",
     "summary": "중소벤처기업부 오픈이노베이션 지원사업에 참여한 우수 창업기업과 수요기업 간 시장검증(PoV) 등 후속 협업 지원을 위해 「민관협력 오픈이노베이션 지원」 2026년 &lsquo;성과기업 후속 지원&rsquo; 사업에 참여할 창업기업을 다음과 같이 모집합니다. □ 사업목적 : 중소벤처기업부 오픈이노베이션 지원사업에 참여한 우수 창업기업의 지속 성장을 위해 PoV 등 후속 협업 지원 □ 모집대상…"
+  },
+  {
+    "id": "178845",
+    "title": "2026년 웰컴 투 팁스 1차 참가기업 모집 (충청권)",
+    "field": "행사ㆍ네트워크",
+    "agency": "(주)로우파트너스",
+    "org": "프리팁스 투자육성부",
+    "target": "충청권(대전·세종·충남·충북) 소재 창업 후 2년 3개월 미만 기업 ※ 신청가능 창업(설립)일 기준 : '24.5.1 ~",
+    "region": "전국",
+    "industry": "전업종",
+    "amount": "",
+    "applyStart": "2026-08-07",
+    "applyEnd": "2026-08-18",
+    "registeredAt": "",
+    "sourceUrl": "https://www.k-startup.go.kr/web/contents/bizpbanc-ongoing.do?schM=view&pbancSn=178845",
+    "howto": "",
+    "summary": "충청권 소재의 유망한 기술 기반 초기 창업기업을 발굴하여, 팁스(TIPS) 사업 연계 등 사업 성장을 지원하는 『2026년 웰컴 투 팁스』프로그램의 참가기업을 아래와 같이 공고합니다."
   }
 ]
