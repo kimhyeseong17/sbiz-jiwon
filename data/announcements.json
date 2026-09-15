@@ -28944,7 +28944,7 @@
     "industry": "전업종",
     "amount": "",
     "applyStart": "2026-08-12",
-    "applyEnd": "2026-09-14",
+    "applyEnd": "2026-09-28",
     "registeredAt": "",
     "sourceUrl": "https://www.k-startup.go.kr/web/contents/bizpbanc-ongoing.do?schM=view&pbancSn=178896",
     "howto": "",
@@ -33534,7 +33534,7 @@
     "industry": "전업종",
     "amount": "",
     "applyStart": "2026-09-08",
-    "applyEnd": "2026-09-11",
+    "applyEnd": "2026-09-15",
     "registeredAt": "",
     "sourceUrl": "https://www.k-startup.go.kr/web/contents/bizpbanc-ongoing.do?schM=view&pbancSn=179197",
     "howto": "",
@@ -34933,5 +34933,22 @@
     "sourceUrl": "https://www.mss.go.kr/site/smba/ex/bbs/View.do?cbIdx=310&bcIdx=1071161",
     "howto": "",
     "summary": "「2026년 상생결제 확산 유공 포상」 후보자 모집 공고 상생결제 활성화를 통해 중소기업 결제환경 개선에 기여한 기업 &middot; 기관과 개인 등 유공자를 격려하기 위하여 「2026년 상생결제 확산 유공 포상」 후보자를 아래와 같이 모집하오니 많은 참여 바랍니다. 2026년 9월 14일 중소벤처기업부 장관"
+  },
+  {
+    "id": "mss_1071194",
+    "title": "「민관협력 오픈이노베이션 지원」 ‘공공데이터 활용 지원’ 공공기관 제안형(Top-Down) 창업기업 모집공고",
+    "field": "중기부 지원사업",
+    "agency": "중소벤처기업부",
+    "org": "신산업기술창업과",
+    "target": "",
+    "region": "전국",
+    "industry": "전업종",
+    "amount": "",
+    "applyStart": "2026-09-15",
+    "applyEnd": "2026-10-06",
+    "registeredAt": "",
+    "sourceUrl": "https://www.mss.go.kr/site/smba/ex/bbs/View.do?cbIdx=310&bcIdx=1071194",
+    "howto": "",
+    "summary": "공공기관이 보유한 데이터를 기반으로 창업기업과 개방형 협업을 통해 공공서비스 혁신과 창업기업의 성장(Scale-up)을 촉진하는 &lsquo;공공데이터 활용 지원&rsquo; 공공기관 제안형(Top-Down) 협업 과제 수행에 참여할 창업기업을 다음과 같이 모집합니다. □ 사업목적 : 공공데이터를 창업기업에 개방하고 활용 지원을 통해 공공서비스 혁신과 창업기업 성장(Scale-Up) 촉진 □…"
   }
 ]
